@@ -23,6 +23,8 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
+#include <errno.h>
 
 char *template;
 
@@ -50,6 +52,7 @@ int main (int argc, char **argv) {
 
 	int i, fd, fildes[2], pid, wpid, status;
 	int doit = 1;
+	struct stat sbuf;
 
 	template = NULL;
 
@@ -111,6 +114,15 @@ int main (int argc, char **argv) {
 
 	if (fsync(fd) == -1) sysdie("fsync\n");
 	close(fd);
+
+	if (stat(argv[1], &sbuf) == 0) {
+		uid_t fuid;
+		if (chown(template, getuid() ? -1 : sbuf.st_uid, sbuf.st_gid) == -1) sysdie(template);
+		if (chmod(template, sbuf.st_mode) == -1) sysdie(template);
+		}
+	else if (errno != ENOENT) {
+		sysdie(argv[1]);
+		}
 
 	wpid = wait(&status);
 	if (wpid == -1) sysdie("wait error\n");

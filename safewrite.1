@@ -12,6 +12,10 @@ the target filename.
 .PP
 The temporary file's name is based on the targetfile's pathname plus a
 random suffix.
+.PP
+If the target already exists, the new file will have its group and mode
+bits set to match those of the target.  If run by root, the owner of
+the file will also be set.
 .SH SEE ALSO
 .IR mkstemp (3),
 .IR rename (2)
