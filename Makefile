@@ -1,9 +1,8 @@
 # safewrite package Makefile
 
 MYNAME = safewrite
-VERSION = 1.0
+VERSION = 1.3
 BLURB = "Safely write STDOUT"
-GROUP = Applications/Networking
 DOC = GPL
 TAR = $(MYNAME)-$(VERSION).tar.gz
 COPYRIGHT = GPL
@@ -22,6 +21,6 @@ rpm: $(TAR)
 dist $(TAR) MANIFEST : Makefile
 	makespec
 
-install:
-	install -m 0555 safewrite $(RPM_BUILD_ROOT)/usr/bin/safewrite
-	install -m 0444 safewrite.1 $(RPM_BUILD_ROOT)/usr/man/man1/safewrite.1
+install: installprefix
+	install -m 0555 safewrite `cat installprefix`/bin/safewrite
+	install -m 0444 safewrite.1 `cat installprefix`/man/man1/safewrite.1
