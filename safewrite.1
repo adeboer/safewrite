@@ -10,14 +10,31 @@ file, verifying that the write-to-disk has succeeded and that the
 command has exited with a 0 status before renaming it in place of
 the target filename.
 .PP
+If the command being run exits nonzero,
+.I safewrite
+will exit with the same status after removing its temporary file.  The
+original will be left in place, although watch for
+.IR make (1)
+removing it as a failed target.
+.PP
+If the command being run terminates on a signal,
+if
+.I safewrite
+terminates on a caught signal,
+or there is a disk write failure,
+.I safewrite
+will remove the temporary file and exit with status 1.
+.PP
 The temporary file's name is based on the targetfile's pathname plus a
-random suffix.
+random suffix per
+.IR mkstemp (3).
 .PP
 If the target already exists, the new file will have its group and mode
 bits set to match those of the target.  If run by root, the owner of
 the file will also be set.
 .SH SEE ALSO
 .IR mkstemp (3),
+.IR fsync (2),
 .IR rename (2)
 .SH AUTHOR
 Anthony de Boer <adb@leftmind.net>
