@@ -1,0 +1,28 @@
+Safewrite is a utility meant to safely write a file to disk.  It tries
+to implement proper semantics just once on behalf of programs that
+don't, and/or let them be implemented more simply.
+
+Syntax: "safewrite targetfile command [commandargs]"
+
+It runs the specified command as a subprocess, with its standard output
+redirected into a tempfile, which will be renamed in place of the target
+file if all goes well.
+
+Checks include:
+ - verify success of every system call (open, write, close)
+ - write data into a temporary file
+ - verify that the command exited with status 0
+ - sync the file after last write
+ - set tempfile permissions to match existing target's
+ - use rename() to move the temporary into the official place
+ - don't damage an existing target file if any problems occurred
+ - try to remove the tempfile if anything bad happens
+
+TODO
+ - trap signals: unlink tempfile and die (would signal subprocess,
+ but it should get SIGPIPE when we go away)
+ - default file permissions if target didn't exist
+ - fix makefile to install more generically on other Unix flavours;
+ right now it's broken mid-transition away from RH.
+
+adb
