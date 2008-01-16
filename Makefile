@@ -1,7 +1,7 @@
 # safewrite package Makefile
 
 MYNAME = safewrite
-VERSION = 1.0
+VERSION = 1.1
 BLURB = "Safely write STDOUT"
 GROUP = Applications/Networking
 DOC = GPL
