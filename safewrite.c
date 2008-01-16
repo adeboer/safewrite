@@ -53,6 +53,7 @@ int main (int argc, char **argv) {
 	int i, fd, fildes[2], pid, wpid, status;
 	int doit = 1;
 	struct stat sbuf;
+	mode_t mymask;
 
 	template = NULL;
 
@@ -64,8 +65,10 @@ int main (int argc, char **argv) {
 	memcpy(template, argv[1], i);
 	memcpy(template+i, "XXXXXX\0", 7);
 
+	mymask = umask(0077);
 	fd = mkstemp(template);
 	if (fd == -1) sysdie(template);
+	umask(mymask);
 
 	if (pipe(fildes)) sysdie("pipe");
 
@@ -116,11 +119,13 @@ int main (int argc, char **argv) {
 	close(fd);
 
 	if (stat(argv[1], &sbuf) == 0) {
-		uid_t fuid;
 		if (chown(template, getuid() ? -1 : sbuf.st_uid, sbuf.st_gid) == -1) sysdie(template);
 		if (chmod(template, sbuf.st_mode) == -1) sysdie(template);
 		}
-	else if (errno != ENOENT) {
+	else if (errno == ENOENT) {
+		if (chmod(template, 0666 & !mymask) == -1) sysdie(template);
+		}
+	else {
 		sysdie(argv[1]);
 		}
 
