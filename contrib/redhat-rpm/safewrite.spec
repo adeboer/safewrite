@@ -1,10 +1,10 @@
 Name: safewrite
 Summary: Safely write STDOUT
-Version: 1.1
+Version: 1.3
 Release: 0
 Copyright: GPL
 Group: Applications/Networking
-Source: safewrite-1.1.tar.gz
+Source: safewrite-1.3.tar.gz
 BuildRoot: /tmp/safewrite.build
 
 %description
@@ -14,6 +14,7 @@ Safely write STDOUT
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT/usr/bin
 mkdir -p $RPM_BUILD_ROOT/usr/man/man1
+echo $RPM_BUILD_ROOT/usr > installprefix
 
 %setup
 
