@@ -1,0 +1,23 @@
+.TH safewrite 1 "Commands"
+.SH NAME
+safewrite - safely write a file
+.SH SYNOPSIS
+.B safewrite
+.I targetfile command [commandargs]
+.SH DESCRIPTION
+This command writes the standard output of a command to a temporary
+file, verifying that the write-to-disk has succeeded and that the
+command has exited with a 0 status before renaming it in place of
+the target filename.
+.PP
+The temporary file's name is based on the targetfile's pathname plus a
+random suffix.
+.PP
+If the target already exists, the new file will have its group and mode
+bits set to match those of the target.  If run by root, the owner of
+the file will also be set.
+.SH SEE ALSO
+.IR mkstemp (3),
+.IR rename (2)
+.SH AUTHOR
+Anthony de Boer <adb@leftmind.net>
