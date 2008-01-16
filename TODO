@@ -7,3 +7,8 @@ timeout option
 lockfile option
 
 permissions option
+
+flag to leave backup
+
+flag to replace only if modified
+
