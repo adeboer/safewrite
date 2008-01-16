@@ -1,8 +1,0 @@
-GPL
-MANIFEST
-Makefile
-contrib
-contrib/redhat-rpm
-contrib/redhat-rpm/safewrite.spec
-safewrite.1
-safewrite.c
