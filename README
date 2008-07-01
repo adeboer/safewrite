@@ -24,6 +24,9 @@ Up through v1.3, a file newly created by safewrite would have 0600
 (rw-------) permissions; now such a file gets normal default permissions.
 Existing files continue to have unchanged permissions.
 
+There is now also a "take" command, which is shorthand for "safewrite
+myfile cat myfile", but which can do multiple files at once.
+
 TODO
  - trap signals: unlink tempfile and die (would signal subprocess,
  but it should get SIGPIPE when we go away)
@@ -37,6 +40,5 @@ MAYBE
  output differs, so that make(1) and the like don't see an unnecessarily
  modified file.
  - backup option: save old version of target file.
- - "take" command to grab copies of read-only or multilinked files.
 
 adb
