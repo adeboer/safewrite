@@ -48,21 +48,37 @@ void sysdie(char *s) {
 	exit(1);
 	}
 
+void usage() {
+	die("usage: safewrite [ -m mode ] targetfile command [args]\n");
+	}
+
 int main (int argc, char **argv) {
 
-	int i, fd, fildes[2], pid, wpid, status;
+	int i, fd, fildes[2], pid, wpid, status, opt;
 	int doit = 1;
+	int modeopt = 0;
 	struct stat sbuf;
-	mode_t mymask;
+	mode_t mymask, mymode;
 
 	template = NULL;
 
-	if (argc < 3) die("usage: safewrite targetfile command [args]\n");
+	while ((opt = getopt(argc, argv, "m:")) != -1) {
+		switch(opt) {
+		case 'm':
+			mymode = strtol(optarg,(char **)NULL, 8);
+			modeopt = 1;
+			break;
+		default:
+			usage();
+			}
+		}
 
-	i = strlen(argv[1]);
+	if (argc < optind+2) usage();
+
+	i = strlen(argv[optind]);
 	template = malloc(i+8);
 	if (!template) die("malloc failed\n");
-	memcpy(template, argv[1], i);
+	memcpy(template, argv[optind], i);
 	memcpy(template+i, "XXXXXX\0", 7);
 
 	mymask = umask(0077);
@@ -81,8 +97,8 @@ int main (int argc, char **argv) {
 			close(fildes[0]);
 			close(fildes[1]);
 			close(fd);
-			execvp(argv[2], argv+2);
-			sysdie(argv[2]);
+			execvp(argv[optind+1], argv+optind+1);
+			sysdie(argv[optind+1]);
 			;;
 		case -1:
 			sysdie("cannot fork");
@@ -120,14 +136,16 @@ int main (int argc, char **argv) {
 
 	if (stat(argv[1], &sbuf) == 0) {
 		if (chown(template, getuid() ? -1 : sbuf.st_uid, sbuf.st_gid) == -1) sysdie(template);
-		if (chmod(template, sbuf.st_mode) == -1) sysdie(template);
+		if (modeopt == 0) mymode = sbuf.st_mode;
 		}
 	else if (errno == ENOENT) {
-		if (chmod(template, 0666 & ~mymask) == -1) sysdie(template);
+		if (modeopt == 0) mymode = 0666 & ~mymask;
 		}
 	else {
-		sysdie(argv[1]);
+		sysdie(argv[optind]);
 		}
+
+	if (chmod(template, mymode) == -1) sysdie(template);
 
 	wpid = wait(&status);
 	if (wpid == -1) sysdie("wait error\n");
@@ -144,7 +162,7 @@ int main (int argc, char **argv) {
 		die("command killed\n");
 		}
 
-	if (rename(template, argv[1])) sysdie("rename failed\n");
+	if (rename(template, argv[optind])) sysdie("rename failed\n");
 
 	return 0;
 	}

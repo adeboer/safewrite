@@ -3,7 +3,7 @@
 safewrite - safely write a file
 .SH SYNOPSIS
 .B safewrite
-.I targetfile command [commandargs]
+.I [ -m MODE ] targetfile command [commandargs]
 .SH DESCRIPTION
 This command writes the standard output of a command to a temporary
 file, verifying that the write-to-disk has succeeded and that the
@@ -32,6 +32,11 @@ random suffix per
 If the target already exists, the new file will have its group and mode
 bits set to match those of the target.  If run by root, the owner of
 the file will also be set.
+.SH OPTIONS
+.TP
+.B -m MODE
+Sets the permissions of the target file to MODE, which should be specified
+in octal.
 .SH SEE ALSO
 .IR mkstemp (3),
 .IR fsync (2),
