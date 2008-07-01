@@ -123,7 +123,7 @@ int main (int argc, char **argv) {
 		if (chmod(template, sbuf.st_mode) == -1) sysdie(template);
 		}
 	else if (errno == ENOENT) {
-		if (chmod(template, 0666 & !mymask) == -1) sysdie(template);
+		if (chmod(template, 0666 & ~mymask) == -1) sysdie(template);
 		}
 	else {
 		sysdie(argv[1]);
