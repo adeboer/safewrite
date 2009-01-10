@@ -1,0 +1,29 @@
+.TH take 1 "Commands"
+.SH NAME
+take - take a copy of a file
+.SH SYNOPSIS
+.B take
+.I [ -m MODE ] file [file2 ... fileN ]
+.SH DESCRIPTION
+This command takes a copy of a file, putting it in place of the original.
+This may be a needful action if one has read-only access to the file (but
+in a writeable directory) and wants to edit it; this may happen due to
+having a file created by another user or a symlink to a read-only file (in
+which case it effectively dereferences the symlink).  It may also be useful
+with a file that has multiple hard links, in order that edits don't affect
+the version of the file visible elsewhere.
+.PP
+.IR take (1)
+is careful to verify that writing of the copy has succeeded
+before replacing the original with it.
+.SH OPTIONS
+.TP
+.B -m MODE
+Sets the permissions of the target file to MODE, which should be specified
+in octal.  Permission defaults to being that of the original file.
+.SH SEE ALSO
+.IR mkstemp (3),
+.IR fsync (2),
+.IR rename (2)
+.SH AUTHOR
+Anthony de Boer <adb@leftmind.net>

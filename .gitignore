@@ -7,3 +7,5 @@ configure
 depcomp
 install-sh
 missing
+safewrite
+take
