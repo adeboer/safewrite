@@ -17,14 +17,7 @@
 	USA
 */
 
-#include <stdlib.h>
-#include <string.h>
-#include <signal.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <sys/stat.h>
-#include <errno.h>
+#include "system.h"
 
 char *template;
 
@@ -119,7 +112,9 @@ int main (int argc, char **argv) {
 	close(fd);
 
 	if (stat(argv[1], &sbuf) == 0) {
+#ifdef HAVE_CHOWN
 		if (chown(template, getuid() ? -1 : sbuf.st_uid, sbuf.st_gid) == -1) sysdie(template);
+#endif
 		if (chmod(template, sbuf.st_mode) == -1) sysdie(template);
 		}
 	else if (errno == ENOENT) {

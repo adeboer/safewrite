@@ -1,2 +1,7 @@
-bin_PROGRAMS = safewrite
-safewrite_SOURCES = safewrite.c
+bin_PROGRAMS = safewrite take
+
+safewrite_SOURCES = safewrite.c system.h config.h
+
+take_SOURCES = take.c system.h config.h
+
+man_MANS = safewrite.1
