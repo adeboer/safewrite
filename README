@@ -18,11 +18,27 @@ Checks include:
  - don't damage an existing target file if any problems occurred
  - try to remove the tempfile if anything bad happens
 
+NOTE
+
+Up through v1.3, a file newly created by safewrite would have 0600
+(rw-------) permissions; now such a file gets normal default permissions.
+Existing files continue to have unchanged permissions.
+
+There is now also a "take" command, which is shorthand for "safewrite
+myfile cat myfile", but which can do multiple files at once.
+
 TODO
  - trap signals: unlink tempfile and die (would signal subprocess,
  but it should get SIGPIPE when we go away)
- - default file permissions if target didn't exist
  - fix makefile to install more generically on other Unix flavours;
  right now it's broken mid-transition away from RH.
+
+MAYBE
+ - lockfile option: other instances of the same calling script would be
+ locked out to prevent unnecessary duplicate runs.
+ - samefile option: compare to existing and don't write anything unless
+ output differs, so that make(1) and the like don't see an unnecessarily
+ modified file.
+ - backup option: save old version of target file.
 
 adb
