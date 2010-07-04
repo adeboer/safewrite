@@ -52,23 +52,40 @@ void sysdie(char *s)
 	exit(1);
 }
 
+void usage()
+{
+	die("usage: take [ -m mode ] file1 [file2...]\n");
+}
+
 int main (int argc, char **argv)
 {
-	int fno;
-
 	template = NULL;
 
-	if (argc < 2) die("usage: take [files]\n");
+	mode_t mymask = umask(0077);
+	mode_t mymode = 0666 & ~mymask;
+	int opt;
 
-	for (fno = 1; fno < argc; fno++) {
-		int i = strlen(argv[fno]);
+	while ((opt = getopt(argc, argv, "m:")) != -1) {
+		switch(opt) {
+		case 'm':
+			mymode = strtol(optarg,(char **)NULL, 8);
+			break;
+		default:
+			usage();
+			}
+		}
+
+	if (optind >= argc) usage();
+
+	while (optind < argc) {
+		int i = strlen(argv[optind]);
 		template = malloc(i+8);
 		if (!template) die("malloc failed\n");
-		memcpy(template, argv[fno], i);
+		memcpy(template, argv[optind], i);
 		memcpy(template+i, "XXXXXX\0", 7);
 
-		int ifd = open(argv[fno], O_RDONLY);
-		if (ifd == -1) sysdie(argv[fno]);
+		int ifd = open(argv[optind], O_RDONLY);
+		if (ifd == -1)  sysdie(argv[optind]);
 		int ofd = mkstemp(template);
 		if (ofd == -1) sysdie(template);
 		int doit = 1;
@@ -78,26 +95,29 @@ int main (int argc, char **argv)
 			int rd = read(ifd, buffer, sizeof(buffer));
 			int wr;
 			switch(rd) {
-			case -1:
-				sysdie("read failed");
-				break;
-			case 0:
-				doit = 0;
-				break;
-			default:
-				wr = write(ofd, buffer, rd);
-				if (wr == -1) sysdie("write failed\n");
-				if (wr != rd) die("incomplete write\n");
-				break;
-			}
+				case -1:
+					sysdie("read failed");
+					break;
+				case 0:
+					doit = 0;
+					break;
+				default:
+					wr = write(ofd, buffer, rd);
+					if (wr == -1) sysdie("write failed\n");
+					if (wr != rd) die("incomplete write\n");
+					break;
+				}
 		} while (doit);
 
 		close(ifd);
 		if (fsync(ofd) == -1) sysdie("fsync\n");
 		close(ofd);
-		if (rename(template, argv[fno])) sysdie("rename failed\n");
+		if (chmod(template, mymode) == -1) sysdie(template);
+		if (rename(template, argv[optind])) sysdie("rename failed\n");
 		free(template);
 		template = NULL;
+		optind++;
 	}
+
 	return 0;
 }
