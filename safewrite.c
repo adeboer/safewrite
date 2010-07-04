@@ -186,7 +186,7 @@ int main (int argc, char **argv) {
 
 	close(fildes[0]);
 
-	if (stat(argv[1], &sbuf) == 0) {
+	if (stat(argv[optind], &sbuf) == 0) {
 #ifdef HAVE_CHOWN
 		if (chown(template, getuid() ? -1 : sbuf.st_uid, sbuf.st_gid) == -1) sysdie(template);
 #endif
