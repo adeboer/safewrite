@@ -1,3 +1,8 @@
+1.4
+
+* Use gnu autotools
+* New "take" command
+
 1.3
 
   Manpage improvements.
