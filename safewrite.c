@@ -31,31 +31,39 @@ int diffing = 0;		/* true if diffing old file */
 char buff1[BUFSIZE];		/* new data from command */
 char buff2[BUFSIZE];		/* used to handle data from old file */
 
-void cleanup() {
+void cleanup()
+{
 	if (template) unlink(template);
-	}
+}
 
-void say(char *s) {
-	write (2, s, strlen(s));
-	}
+void say(char *s)
+{
+	int rc = write (2, s, strlen(s));
+	/* who exactly were you going to tell that STDERR was hosed ?!? */
+	(void)rc;
+}
 
-void die(char *s) {
+void die(char *s)
+{
 	say(s);
 	cleanup();
 	exit(1);
-	}
+}
 
-void sysdie(char *s) {
+void sysdie(char *s)
+{
 	perror(s);
 	cleanup();
 	exit(1);
-	}
+}
 
-void usage() {
+void usage()
+{
 	die("usage: safewrite [ -m mode ] targetfile command [args]\n");
-	}
+}
 
-void opentemp() {
+void opentemp()
+{
 	int i = strlen(basename);
 	template = malloc(i+8);
 	if (!template) die("malloc failed\n");
@@ -65,9 +73,10 @@ void opentemp() {
 	fd = mkstemp(template);
 	if (fd == -1) sysdie(template);
 	umask(mymask);
-	}
+}
 
-void different() {
+void different()
+{
 	opentemp();
 	diffing = 0;
 	if (same) {
@@ -82,12 +91,12 @@ void different() {
 			if (wr == -1) sysdie("write failed");
 			if (wr != rd) die("incomplete write");
 			same -= rd;
-			}
 		}
 	}
+}
 
-int main (int argc, char **argv) {
-
+int main (int argc, char **argv)
+{
 	int fildes[2], pid, wpid, status, opt;
 	int doit = 1;
 	int modeopt = 0;
@@ -107,8 +116,8 @@ int main (int argc, char **argv) {
 			break;
 		default:
 			usage();
-			}
 		}
+	}
 
 	if (argc < optind+2) usage();
 	basename = argv[optind];
@@ -116,7 +125,7 @@ int main (int argc, char **argv) {
 	if (diffing) {
 		oldfd = open(basename, O_RDONLY);
 		if (oldfd == -1) diffing = 0;
-		}
+	}
 
 	if (!diffing) opentemp();
 
@@ -142,7 +151,7 @@ int main (int argc, char **argv) {
 			close(0);
 			close(1);
 			;;
-		}
+	}
 
 	while(doit) {
 		int rd = read(fildes[0], buff1, sizeof(buff1));
@@ -150,11 +159,10 @@ int main (int argc, char **argv) {
 		switch(rd) {
 			case -1:
 				sysdie("read failed");
-				;;
+				/* fallthrough */
 			case 0:
 				doit = 0;
 				break;
-				;;
 			default:
 				if (diffing) {
 					int rr = read(oldfd, buff2, rd);
@@ -175,14 +183,14 @@ int main (int argc, char **argv) {
 					if (wr == -1) sysdie("write failed");
 					if (wr != rd) die("incomplete write\n");
 				}
-				;;
-			}
+				break;
 		}
+	}
 
 	if (diffing) {
 		int rd = read(fildes[0], buff2, 1);
 		if (rd > 0) different();
-		}
+	}
 
 	close(fildes[0]);
 
@@ -194,21 +202,18 @@ int main (int argc, char **argv) {
 		}
 	else if (errno == ENOENT) {
 		if (chmod(template, 0666 & !mymask) == -1) sysdie(template);
-		}
-	else {
+	} else {
 		if (fsync(fd) == -1) sysdie("fsync");
 		close(fd);
 
 		if (stat(basename, &sbuf) == 0) {
 			if (chown(template, getuid() ? -1 : sbuf.st_uid, sbuf.st_gid) == -1) sysdie(template);
 			if (modeopt == 0) mymode = sbuf.st_mode;
-			}
-		else if (errno == ENOENT) {
+		} else if (errno == ENOENT) {
 			if (modeopt == 0) mymode = 0666 & ~mymask;
-			}
-		else {
+		} else {
 			sysdie(basename);
-			}
+		}
 
 		if (chmod(template, mymode) == -1) sysdie(template);
 
@@ -221,14 +226,13 @@ int main (int argc, char **argv) {
 			if (es) {
 				cleanup();
 				exit(es);
-				}
 			}
-		else {
+		} else {
 			die("command killed\n");
-			}
-
-		if (rename(template, basename)) sysdie("rename failed");
 		}
 
-	return 0;
+		if (rename(template, basename)) sysdie("rename failed");
 	}
+
+	return 0;
+}

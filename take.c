@@ -28,7 +28,9 @@ void cleanup()
 
 void say(char *s)
 {
-	write (2, s, strlen(s));
+	int rc = write (2, s, strlen(s));
+	/* who exactly were you going to tell that STDERR was hosed ?!? */
+	(void)rc;
 }
 
 void die(char *s)
