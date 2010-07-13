@@ -122,6 +122,9 @@ int main (int argc, char **argv)
 	if (argc < optind+2) usage();
 	basename = argv[optind];
 
+	if (pipe(fildes)) sysdie("pipe");
+	if (signal(SIGCHLD, SIG_DFL) == SIG_ERR) die("signal() failure\n");
+
 	if (diffing) {
 		oldfd = open(basename, O_RDONLY);
 		if (oldfd == -1) diffing = 0;
@@ -129,9 +132,6 @@ int main (int argc, char **argv)
 
 	if (!diffing) opentemp();
 
-	if (pipe(fildes)) sysdie("pipe");
-
-	if (signal(SIGCHLD, SIG_DFL) == SIG_ERR) die("signal() failure\n");
 	pid = fork();
 
 	switch(pid) {
@@ -155,84 +155,81 @@ int main (int argc, char **argv)
 
 	while(doit) {
 		int rd = read(fildes[0], buff1, sizeof(buff1));
-		int wr;
 		switch(rd) {
-			case -1:
-				sysdie("read failed");
-				/* fallthrough */
-			case 0:
-				doit = 0;
-				break;
-			default:
-				if (diffing) {
-					int rr = read(oldfd, buff2, rd);
-					int ok = (rr == rd);
-					int rx = rr;
-					while (ok && rx--) {
-						ok = (buff2[rx] == buff1[rx]);
-						}
-					if (ok) {
-						same += rr;
-						}
-					else {
-						different();
-						}
-					}
-				if (!diffing) {
-					wr = write(fd, buff1, rd);
-					if (wr == -1) sysdie("write failed");
-					if (wr != rd) die("incomplete write\n");
+		case -1:
+			sysdie("read failed");
+			/* NOTREACHED */
+		case 0:
+			doit = 0;
+			break;
+		default:
+			if (diffing) {
+				int rx = read(oldfd, buff2, rd);
+				int ok = (rx == rd);
+				while (ok && rx--) {
+					ok = (buff2[rx] == buff1[rx]);
 				}
-				break;
+				if (ok) {
+					same += rd;
+				} else {
+					different();
+				}
+			}
+			if (!diffing) {
+				int wr = write(fd, buff1, rd);
+				if (wr == -1) sysdie("write failed");
+				if (wr != rd) die("incomplete write\n");
+			}
+			break;
 		}
 	}
 
 	if (diffing) {
-		int rd = read(fildes[0], buff2, 1);
-		if (rd > 0) different();
+		int rd = read(oldfd, buff2, 1);
+		if (rd > 0) {
+			different();
+		} else {
+			/* same file */
+			exit(0);
+		}
 	}
 
 	close(fildes[0]);
 
-	if (stat(argv[optind], &sbuf) == 0) {
-#ifdef HAVE_CHOWN
-		if (chown(template, getuid() ? -1 : sbuf.st_uid, sbuf.st_gid) == -1) sysdie(template);
-#endif
-		if (chmod(template, sbuf.st_mode) == -1) sysdie(template);
-		}
-	else if (errno == ENOENT) {
-		if (chmod(template, 0666 & !mymask) == -1) sysdie(template);
-	} else {
-		if (fsync(fd) == -1) sysdie("fsync");
-		close(fd);
+	if (fsync(fd) == -1) sysdie("fsync");
 
+	if (modeopt == 0) {
 		if (stat(basename, &sbuf) == 0) {
-			if (chown(template, getuid() ? -1 : sbuf.st_uid, sbuf.st_gid) == -1) sysdie(template);
-			if (modeopt == 0) mymode = sbuf.st_mode;
+#ifdef HAVE_CHOWN
+			if (fchown(fd, getuid() ? -1 : sbuf.st_uid, sbuf.st_gid) == -1) sysdie(template);
+#endif
+			mymode = sbuf.st_mode;
 		} else if (errno == ENOENT) {
-			if (modeopt == 0) mymode = 0666 & ~mymask;
+			mymode = 0666 & ~mymask;
 		} else {
 			sysdie(basename);
 		}
-
-		if (chmod(template, mymode) == -1) sysdie(template);
-
-		wpid = wait(&status);
-		if (wpid == -1) sysdie("wait error");
-		if (wpid != pid) die("wrong pid?!?\n");
-
-		if (WIFEXITED(status)) {
-			int es = WEXITSTATUS(status);
-			if (es) {
-				cleanup();
-				exit(es);
-			}
-		} else {
-			die("command killed\n");
-		}
-
-		if (rename(template, basename)) sysdie("rename failed");
 	}
+
+	if (fchmod(fd, mymode) == -1) sysdie(template);
+
+	close(fd);
+
+	wpid = wait(&status);
+	if (wpid == -1) sysdie("wait error");
+	if (wpid != pid) die("wrong pid?!?\n");
+
+	if (WIFEXITED(status)) {
+		int es = WEXITSTATUS(status);
+		if (es) {
+			cleanup();
+			exit(es);
+		}
+	} else {
+		die("command killed\n");
+	}
+
+	if (rename(template, basename)) sysdie("rename failed");
 
 	return 0;
 }
