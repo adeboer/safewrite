@@ -1,6 +1,6 @@
-Safewrite is a utility meant to safely write a file to disk.  It tries
-to implement proper semantics just once on behalf of programs that
-don't, and/or let them be implemented more simply.
+Safewrite is a utility meant to safely write a file to disk.  It
+implements proper semantics just once on behalf of programs that don't,
+and/or lets them be implemented more simply.
 
 Syntax: "safewrite targetfile command [commandargs]"
 
@@ -18,27 +18,29 @@ Checks include:
  - don't damage an existing target file if any problems occurred
  - try to remove the tempfile if anything bad happens
 
+Options allow setting permissions of the new file and comparing an
+existing file to replace only if changed.  See the man page in the
+distribution.
+
+There is now also a "take" command, which is shorthand for "safewrite
+myfile cat myfile", but which can do multiple files at once.  This is
+useful in case myfile is a symlink, hardlink, read-only file, owned by
+someone else, or the like, and you want a copy you own and can edit
+without causing problems for other links of the file.
+
 NOTE
 
 Up through v1.3, a file newly created by safewrite would have 0600
 (rw-------) permissions; now such a file gets normal default permissions.
 Existing files continue to have unchanged permissions.
 
-There is now also a "take" command, which is shorthand for "safewrite
-myfile cat myfile", but which can do multiple files at once.
-
 TODO
  - trap signals: unlink tempfile and die (would signal subprocess,
  but it should get SIGPIPE when we go away)
- - fix makefile to install more generically on other Unix flavours;
- right now it's broken mid-transition away from RH.
 
 MAYBE
  - lockfile option: other instances of the same calling script would be
  locked out to prevent unnecessary duplicate runs.
- - samefile option: compare to existing and don't write anything unless
- output differs, so that make(1) and the like don't see an unnecessarily
- modified file.
  - backup option: save old version of target file.
 
 adb
