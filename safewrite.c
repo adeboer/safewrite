@@ -122,6 +122,9 @@ int main (int argc, char **argv)
 	if (argc < optind+2) usage();
 	basename = argv[optind];
 
+	if (pipe(fildes)) sysdie("pipe");
+	if (signal(SIGCHLD, SIG_DFL) == SIG_ERR) die("signal() failure\n");
+
 	if (diffing) {
 		oldfd = open(basename, O_RDONLY);
 		if (oldfd == -1) diffing = 0;
@@ -129,9 +132,6 @@ int main (int argc, char **argv)
 
 	if (!diffing) opentemp();
 
-	if (pipe(fildes)) sysdie("pipe");
-
-	if (signal(SIGCHLD, SIG_DFL) == SIG_ERR) die("signal() failure\n");
 	pid = fork();
 
 	switch(pid) {
@@ -155,40 +155,37 @@ int main (int argc, char **argv)
 
 	while(doit) {
 		int rd = read(fildes[0], buff1, sizeof(buff1));
-		int wr;
 		switch(rd) {
-			case -1:
-				sysdie("read failed");
-				/* fallthrough */
-			case 0:
-				doit = 0;
-				break;
-			default:
-				if (diffing) {
-					int rr = read(oldfd, buff2, rd);
-					int ok = (rr == rd);
-					int rx = rr;
-					while (ok && rx--) {
-						ok = (buff2[rx] == buff1[rx]);
-						}
-					if (ok) {
-						same += rr;
-						}
-					else {
-						different();
-						}
-					}
-				if (!diffing) {
-					wr = write(fd, buff1, rd);
-					if (wr == -1) sysdie("write failed");
-					if (wr != rd) die("incomplete write\n");
+		case -1:
+			sysdie("read failed");
+			/* NOTREACHED */
+		case 0:
+			doit = 0;
+			break;
+		default:
+			if (diffing) {
+				int rx = read(oldfd, buff2, rd);
+				int ok = (rx == rd);
+				while (ok && rx--) {
+					ok = (buff2[rx] == buff1[rx]);
 				}
-				break;
+				if (ok) {
+					same += rd;
+				} else {
+					different();
+				}
+			}
+			if (!diffing) {
+				int wr = write(fd, buff1, rd);
+				if (wr == -1) sysdie("write failed");
+				if (wr != rd) die("incomplete write\n");
+			}
+			break;
 		}
 	}
 
 	if (diffing) {
-		int rd = read(fildes[0], buff2, 1);
+		int rd = read(oldfd, buff2, 1);
 		if (rd > 0) different();
 	}
 
@@ -211,11 +208,10 @@ int main (int argc, char **argv)
 	if (diffing) exit(0);
 
 	if (fsync(fd) == -1) sysdie("fsync");
-	if (close(fd) == -1) sysdie("close");
 
 	if (stat(basename, &sbuf) == 0) {
 #ifdef HAVE_CHOWN
-		if (chown(template, getuid() ? -1 : sbuf.st_uid, sbuf.st_gid) == -1) sysdie(template);
+		if (fchown(fd, getuid() ? -1 : sbuf.st_uid, sbuf.st_gid) == -1) sysdie(template);
 #endif
 		if (modeopt == 0) mymode = sbuf.st_mode;
 	} else if (errno == ENOENT) {
@@ -224,7 +220,9 @@ int main (int argc, char **argv)
 		sysdie(basename);
 	}
 
-	if (chmod(template, mymode & 0777) == -1) sysdie(template);
+	if (fchmod(fd, mymode & 0777) == -1) sysdie(template);
+
+	if (close(fd) == -1) sysdie("close");
 
 	if (rename(template, basename)) sysdie("rename failed");
 
