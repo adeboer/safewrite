@@ -1,0 +1,16 @@
+#!/bin/sh
+
+rm -f quux
+set -x
+
+if ./safewrite quux false
+then
+	: That should not have worked
+	exit 1
+fi
+
+if test -e quux
+then
+	: File should not have been created
+	exit 1
+fi

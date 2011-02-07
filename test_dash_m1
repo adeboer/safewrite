@@ -1,0 +1,9 @@
+#!/bin/sh
+
+rm -f quux baz
+set -x
+cp Makefile quux || exit 1
+./safewrite -m605 quux cat safewrite || exit 1
+ls -l quux > baz
+grep -q rw----r-x baz || exit 1
+exec cmp quux safewrite

@@ -1,0 +1,16 @@
+#!/bin/sh
+
+rm -f quux inode_pre inode_post
+set -x
+cp Makefile quux || exit 1
+ls -i quux > inode_pre
+./safewrite quux cat safewrite || exit 1
+ls -i quux > inode_post
+if cmp -s inode_pre inode_post
+then
+	: File was NOT replaced
+	exit 1
+else
+	: File was replaced
+fi
+exec cmp quux safewrite

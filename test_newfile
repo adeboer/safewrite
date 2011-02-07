@@ -1,0 +1,6 @@
+#!/bin/sh
+
+rm -f quux
+set -x
+./safewrite quux cat safewrite || exit 1
+exec cmp quux safewrite

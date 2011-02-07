@@ -1,0 +1,3 @@
+#!/bin/sh
+
+rm -f quux inode_pre inode_post baz

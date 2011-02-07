@@ -1,0 +1,13 @@
+#!/bin/sh
+
+rm -f quux
+set -x
+cp Makefile quux || exit 1
+
+if ./safewrite quux false
+then
+	: That should not have worked
+	exit 1
+fi
+
+exec cmp quux Makefile

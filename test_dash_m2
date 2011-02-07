@@ -1,0 +1,8 @@
+#!/bin/sh
+
+rm -f quux baz
+set -x
+./safewrite -m754 quux cat safewrite || exit 1
+ls -l quux > baz
+grep -q rwxr-xr-- baz || exit 1
+exec cmp quux safewrite
