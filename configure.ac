@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT([safewrite], [1.4], [adb@adb.ca])
+AC_INIT([safewrite], [1.5], [adb@adb.ca])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([safewrite.c])
 AC_CONFIG_HEADER([config.h])

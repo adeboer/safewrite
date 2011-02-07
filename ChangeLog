@@ -1,3 +1,8 @@
+1.5
+
+* Add regression test suite ("make check")
+* Fix merge error that had broken 1.4
+
 1.4
 
 * Use gnu autotools
@@ -5,17 +10,17 @@
 
 1.3
 
-  Manpage improvements.
+* Manpage improvements.
 
 1.2
 
-  Manpage clarifications.
+* Manpage clarifications.
 
 1.1
 
-  Added code to set uid/gid to same as existing file.
+* Added code to set uid/gid to same as existing file.
 
 1.0
 
-  Initial coding.
+* Initial coding.
 
