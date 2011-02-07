@@ -194,45 +194,39 @@ int main (int argc, char **argv)
 
 	close(fildes[0]);
 
-	if (stat(argv[optind], &sbuf) == 0) {
+	wpid = wait(&status);
+	if (wpid == -1) sysdie("wait error");
+	if (wpid != pid) die("wrong pid?!?\n");
+
+	if (WIFEXITED(status)) {
+		int es = WEXITSTATUS(status);
+		if (es) {
+			cleanup();
+			exit(es);
+		}
+	} else {
+		die("command killed\n");
+	}
+
+	if (diffing) exit(0);
+
+	if (fsync(fd) == -1) sysdie("fsync");
+	if (close(fd) == -1) sysdie("close");
+
+	if (stat(basename, &sbuf) == 0) {
 #ifdef HAVE_CHOWN
 		if (chown(template, getuid() ? -1 : sbuf.st_uid, sbuf.st_gid) == -1) sysdie(template);
 #endif
-		if (chmod(template, sbuf.st_mode) == -1) sysdie(template);
-		}
-	else if (errno == ENOENT) {
-		if (chmod(template, 0666 & !mymask) == -1) sysdie(template);
+		if (modeopt == 0) mymode = sbuf.st_mode;
+	} else if (errno == ENOENT) {
+		if (modeopt == 0) mymode = ~mymask;
 	} else {
-		if (fsync(fd) == -1) sysdie("fsync");
-		close(fd);
-
-		if (stat(basename, &sbuf) == 0) {
-			if (chown(template, getuid() ? -1 : sbuf.st_uid, sbuf.st_gid) == -1) sysdie(template);
-			if (modeopt == 0) mymode = sbuf.st_mode;
-		} else if (errno == ENOENT) {
-			if (modeopt == 0) mymode = 0666 & ~mymask;
-		} else {
-			sysdie(basename);
-		}
-
-		if (chmod(template, mymode) == -1) sysdie(template);
-
-		wpid = wait(&status);
-		if (wpid == -1) sysdie("wait error");
-		if (wpid != pid) die("wrong pid?!?\n");
-
-		if (WIFEXITED(status)) {
-			int es = WEXITSTATUS(status);
-			if (es) {
-				cleanup();
-				exit(es);
-			}
-		} else {
-			die("command killed\n");
-		}
-
-		if (rename(template, basename)) sysdie("rename failed");
+		sysdie(basename);
 	}
+
+	if (chmod(template, mymode & 0777) == -1) sysdie(template);
+
+	if (rename(template, basename)) sysdie("rename failed");
 
 	return 0;
 }
