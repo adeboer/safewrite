@@ -1,0 +1,19 @@
+#!/bin/sh
+
+rm -f quux inode_pre inode_post baz
+set -x
+cat safewrite safewrite safewrite safewrite safewrite > quux || exit 1
+cp quux baz || exit 1
+echo X >> baz || exit 1
+cmp -s baz quux && exit 1
+# ls -i quux > inode_pre
+./safewrite -s quux cat baz || exit 1
+# ls -i quux > inode_post
+# if cmp -s inode_pre inode_post
+# then
+	# : File was not replaced
+	# exit 1
+# else
+	# : File was replaced
+# fi
+exec cmp quux baz
