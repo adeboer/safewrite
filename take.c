@@ -60,7 +60,7 @@ int main (int argc, char **argv)
 	mode_t mymode = 0666 & ~mymask;
 	int opt;
 
-	while ((opt = getopt(argc, argv, "m:")) != -1) {
+	while ((opt = getopt(argc, argv, "+m:")) != -1) {
 		switch(opt) {
 		case 'm':
 			mymode = strtol(optarg,(char **)NULL, 8);

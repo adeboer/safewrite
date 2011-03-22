@@ -105,7 +105,7 @@ int main (int argc, char **argv)
 
 	template = NULL;
 
-	while ((opt = getopt(argc, argv, "m:s")) != -1) {
+	while ((opt = getopt(argc, argv, "+m:s")) != -1) {
 		switch(opt) {
 		case 'm':
 			mymode = strtol(optarg,(char **)NULL, 8);
